@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser
 from os import path
+import pandas as pd
 import csv, re, urllib2, json, netaddr, sys
 
 
@@ -11,6 +12,7 @@ class MacLookup(object):
         self.csv_dst = csv_dst
         self.csv_fields = ["MAC", "Brand", "Prefix"]
         self.vendor_details = {}
+        self.state_info = {}
         self.r = re.compile(r'(?:[0-9a-fA-F]:?){12}')
         self.get_mac()
 
@@ -23,8 +25,7 @@ class MacLookup(object):
                 company = vendor_detail[1]
                 mac_prefix = vendor_detail[2]
                 try:
-                    self.vendor_details[mac_dialect]=(company, mac_prefix,
-                                                      state)
+                    self.vendor_details[mac_dialect]=(company, mac_prefix, state)
                 except KeyError as e:
                     print("%s triggered a key error" % (e))
                     sys.exit(1)
@@ -32,7 +33,7 @@ class MacLookup(object):
                 continue
             else:
                 print("%s is not a valid MAC" % (mac))
-        #self.get_output()
+        self.state_info = {key: value[2] for key, value in self.vendor_details.items()}
         self.csv_writer()
 
     def csv_reader(self):
@@ -46,10 +47,12 @@ class MacLookup(object):
                     for row in reader:
                         mac = row[0]
                         state = row[1].upper()
-                        macs[mac]=[date, state]
+                        if not mac in macs.keys():
+                            macs[mac]=["%s|%s" % (date, state)]
+                        else:
+                            macs[mac].append("%s|%s" % (date, state))
             except IOError as e:
-                print("Error code %d while reading %s: %s" %
-                      (e.errno, source, e.strerror))
+                print("Error code %d while reading %s: %s" % (e.errno, source, e.strerror))
                 sys.exit(1)
         return(macs)
 
@@ -59,17 +62,29 @@ class MacLookup(object):
                 writer = csv.DictWriter(f, fieldnames=self.csv_fields)
                 writer.writeheader()
                 for key, value in self.vendor_details.items():
-                    writer.writerow({"MAC": key, "Brand": value[0],
-                                    "Prefix": value[1],
-                                    value[2][0]: value[2][1]})
+                    mac = key
+                    brand = value[0]
+                    prefix = value[1]
+                    for x in value[2]:
+                        state_info = x.split("|")
+                        date = state_info[0]
+                    writer.writerow({"MAC": mac, "Brand": brand, "Prefix": prefix, date: ""})
         except IOError as e:
-            print("Error code %d while writing %s: %s" %
-                  (e.errno, self.csv_dst, e.strerror))
+            print("Error code %d while writing %s: %s" % (e.errno, self.csv_dst, e.strerror))
             sys.exit(1)
+        self.csv_update_columns()
 
-    def csv_add(self):
-        print 'hoi'
-        
+    def csv_update_columns(self):
+        df = pd.read_csv(self.csv_dst)
+        for key, value in self.state_info.items():
+            for x in value:
+                x = x.split("|")
+                mac = key
+                date = x[0]
+                state = x[1]
+                df.loc[df[self.csv_fields[0]] == mac, date] = state
+        df.to_csv(self.csv_dst, sep=",", encoding="utf-8")
+
     def get_vendor_details(self, mac):
         converted_mac = netaddr.EUI(mac)
         converted_mac.dialect = netaddr.mac_unix
@@ -98,18 +113,11 @@ class MacLookup(object):
         else:
             print("was not found")
 
-    def get_output(self):
-        for key, value in self.vendor_details.items():
-            print("Key: %s\nCompany: %s\nPrefix: %s\nDate: %s\nState: %s\n\n" %
-                  (key, value[0], value[1], value[2][0], value[2][1]))
-
 
 def argument_parser():
     parser = ArgumentParser(description="Mac address details -> csv")
-    parser.add_argument("-s", "--src", action="append", type=str, required=True,
-                        help="Provide source csv")
-    parser.add_argument("-d", "--dst", type=str, required=True,
-                        help="Provide destination csv")
+    parser.add_argument("-s", "--src", action="append", type=str, required=True, help="Provide source csv")
+    parser.add_argument("-d", "--dst", type=str, required=True, help="Provide destination csv")
     args = vars(parser.parse_args())
     return(args)
 
