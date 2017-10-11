@@ -107,6 +107,7 @@ class MacLookup(object):
                 return("N/A", "N/A")
         else:
             print("Something went wrong in get_vendor_details_online, go to red alert")
+            sys.exit(1)
 
 
 def argument_parser():
