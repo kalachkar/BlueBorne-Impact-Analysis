@@ -91,9 +91,7 @@ class MacLookup(object):
             company, mac_prefix = self.get_vendor_details_online(converted_mac)
             mac_prefix = mac_prefix.replace(":", "-")
             return(str(converted_mac), str(company), str(mac_prefix))
-        return(str(converted_mac),
-               str(oui.registration().org),
-               str(oui.registration().oui))
+        return(str(converted_mac), str(oui.registration().org), str(oui.registration().oui))
 
     def get_vendor_details_online(self, mac):
         opener = urllib2.build_opener()
