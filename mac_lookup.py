@@ -106,7 +106,7 @@ class MacLookup(object):
             except KeyError:
                 return("N/A", "N/A")
         else:
-            print("was not found")
+            print("Something went wrong in get_vendor_details_online, go to red alert")
 
 
 def argument_parser():
