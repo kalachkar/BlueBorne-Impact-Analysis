@@ -65,10 +65,7 @@ class MacLookup(object):
                     mac = key
                     brand = value[0]
                     prefix = value[1]
-                    for x in value[2]:
-                        state_info = x.split("|")
-                        date = state_info[0]
-                    writer.writerow({"MAC": mac, "Brand": brand, "Prefix": prefix, date: ""})
+                    writer.writerow({"MAC": mac, "Brand": brand, "Prefix": prefix})
         except IOError as e:
             print("Error code %d while writing %s: %s" % (e.errno, self.csv_dst, e.strerror))
             sys.exit(1)
