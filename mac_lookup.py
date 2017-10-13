@@ -72,7 +72,7 @@ class MacLookup(object):
         self.csv_update_columns()
 
     def csv_update_columns(self):
-        df = pd.read_csv(self.csv_dst)
+        df = pd.read_csv(self.csv_dst, sep=",", keep_default_na=False)
         for key, value in self.state_info.items():
             for x in value:
                 x = x.split("|")
@@ -80,7 +80,9 @@ class MacLookup(object):
                 date = x[0]
                 state = x[1]
                 df.loc[df[self.csv_fields[0]] == mac, date] = state
-        df.to_csv(self.csv_dst, sep=",", encoding="utf-8")
+                #df.loc[(df.MAC.isin(['49:18:40:96:9:bf'])) & (df.Prefix == ''), 'Prefix'] = 'N/a'
+        df = df.replace(r'^$', "N/A", regex=True)
+        df.to_csv(self.csv_dst, sep=",", encoding="utf-8", index=False)
 
     def get_vendor_details(self, mac):
         converted_mac = netaddr.EUI(mac)
