@@ -80,20 +80,19 @@ class MacLookup(object):
                 date = x[0]
                 state = x[1]
                 df.loc[df[self.csv_fields[0]] == mac, date] = state
-                #df.loc[(df.MAC.isin(['49:18:40:96:9:bf'])) & (df.Prefix == ''), 'Prefix'] = 'N/a'
         df = df.replace(r'^$', "N/A", regex=True)
         df.to_csv(self.csv_dst, sep=",", encoding="utf-8", index=False)
 
     def get_vendor_details(self, mac):
         converted_mac = netaddr.EUI(mac)
+        mac_prefix = '-'.join(str(converted_mac).split('-')[:3])
         converted_mac.dialect = netaddr.mac_unix
         try:
             oui = converted_mac.oui
         except:
-            company, mac_prefix = self.get_vendor_details_online(converted_mac)
-            mac_prefix = mac_prefix.replace(":", "-")
-            return(str(converted_mac), str(company), str(mac_prefix))
-        return(str(converted_mac), str(oui.registration().org), str(oui.registration().oui))
+            company = self.get_vendor_details_online(converted_mac)
+            return(str(converted_mac), str(company), mac_prefix)
+        return(str(converted_mac), str(oui.registration().org), mac_prefix)
 
     def get_vendor_details_online(self, mac):
         opener = urllib2.build_opener()
@@ -103,10 +102,9 @@ class MacLookup(object):
         if "result" in vendor_detail.keys():
             try:
                 company = vendor_detail["result"]["company"]
-                mac_prefix = vendor_detail["result"]["mac_prefix"]
-                return(company, mac_prefix)
+                return(company)
             except KeyError:
-                return("N/A", "N/A")
+                return("")
         else:
             print("Something went wrong in get_vendor_details_online, go to red alert")
             sys.exit(1)
