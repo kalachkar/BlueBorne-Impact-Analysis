@@ -13,13 +13,13 @@ class MacLookup(object):
         self.csv_fields = ["MAC", "Brand", "Prefix"]
         self.vendor_details = {}
         self.state_info = {}
-        self.r = re.compile(r'(?:[0-9a-fA-F]:?){12}')
         self.get_mac()
 
     def get_mac(self):
         macs = self.csv_reader()
+        r = re.compile(r'(?:[0-9a-fA-F]:?){12}')
         for mac, state in macs.items():
-            if self.r.match(mac):
+            if r.match(mac):
                 vendor_detail = self.get_vendor_details(mac)
                 mac_dialect = vendor_detail[0]
                 company = vendor_detail[1]
@@ -85,7 +85,7 @@ class MacLookup(object):
 
     def get_vendor_details(self, mac):
         converted_mac = netaddr.EUI(mac)
-        mac_prefix = '-'.join(str(converted_mac).split('-')[:3])
+        mac_prefix = "-".join(str(converted_mac).split("-")[:3])
         converted_mac.dialect = netaddr.mac_unix
         try:
             oui = converted_mac.oui
