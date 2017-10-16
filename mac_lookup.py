@@ -7,12 +7,14 @@ import csv, re, urllib2, json, netaddr, sys
 
 
 class MacLookup(object):
-    def __init__(self, csv_src, csv_dst):
+    def __init__(self, csv_src, csv_dst, csv_num):
         self.csv_src = csv_src
         self.csv_dst = csv_dst
+        self.numeral_output = csv_num
         self.csv_fields = ["MAC", "Brand", "Prefix"]
         self.vendor_details = {}
         self.state_info = {}
+        self.state_rating = {"N/A": 0, "GREEN": 1, "YELLOW": 2, "RED": 3}
         self.get_mac()
 
     def get_mac(self):
@@ -47,6 +49,8 @@ class MacLookup(object):
                     for row in reader:
                         mac = row[0]
                         state = row[1].upper()
+                        if self.numeral_output:
+                            state = self.state_rating[state]
                         if not mac in macs.keys():
                             macs[mac]=["%s|%s" % (date, state)]
                         else:
@@ -80,7 +84,10 @@ class MacLookup(object):
                 date = x[0]
                 state = x[1]
                 df.loc[df[self.csv_fields[0]] == mac, date] = state
-        df = df.replace(r'^$', "N/A", regex=True)
+        if self.numeral_output:
+            df = df.replace(r'^$', "0", regex=True)
+        else:
+            df = df.replace(r'^$', "N/A", regex=True)
         df.to_csv(self.csv_dst, sep=",", encoding="utf-8", index=False)
 
     def get_vendor_details(self, mac):
@@ -104,7 +111,7 @@ class MacLookup(object):
                 company = vendor_detail["result"]["company"]
                 return(company)
             except KeyError:
-                return("")
+                return("N/A")
         else:
             print("Something went wrong in get_vendor_details_online, go to red alert")
             sys.exit(1)
@@ -114,6 +121,7 @@ def argument_parser():
     parser = ArgumentParser(description="Mac address details -> csv")
     parser.add_argument("-s", "--src", action="append", type=str, required=True, help="Provide source csv")
     parser.add_argument("-d", "--dst", type=str, required=True, help="Provide destination csv")
+    parser.add_argument("-n", "--num", action="store_true", default=False, required=False, help="Insert numeral values instead of strings")
     args = vars(parser.parse_args())
     return(args)
 
@@ -122,7 +130,8 @@ def main():
     args = argument_parser()
     sources = args["src"]
     destination = args["dst"]
-    MacLookup(sources, destination)
+    numeral_output = args["num"]
+    MacLookup(sources, destination, numeral_output)
 
 
 if __name__ == "__main__":
