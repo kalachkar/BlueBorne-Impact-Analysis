@@ -10,7 +10,7 @@ This repo is to manage source code for the SSN project (SNE master).
 
 ## Examples
 ```bash
-./mac_lookup.py -s 10-01-2017.csv -s 10-02-2017.csv -d /tmp/final.csv --numeral
+./mac_lookup.py -s 10-01-2017.csv -s 10-02-2017.csv -d /tmp/final.csv -n
 ```
 
 ## Usage
