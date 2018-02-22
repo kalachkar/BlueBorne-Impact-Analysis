@@ -1,7 +1,9 @@
-# SSN project
+# SSN project: BlueBorne Impact Analysis
 
 ## Introduction
-This repo is to manage source code for the SSN project (SNE master).
+
+In this repository you will find all relevant files for a research project into BlueBorne Impact Analysis, done by Kees de Jong, Adrien Raulot, 
+Shahrukh Zaidi and Kotaiba Alachkar in October 2017, for [Security of Systems and Networks](https://www.os3.nl/2017-2018/courses/ssn/start) course.
 
 ## Features
  * MAC lookup (both online and offline via the EUI info in the csv Python module).
